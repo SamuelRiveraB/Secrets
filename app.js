@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
+const encrypt = require("mongoose-encryption");
 
 const app = express();
 
@@ -12,13 +13,16 @@ app.use(bodyParser.urlencoded({extended:true}));
 require("dotenv").config(); 
 const srvr = process.env.N1_KEY; 
 const srvrCred = process.env.N1_SECRET;
+const secret = process.env.ENC_SECRET;
 
 mongoose.connect("mongodb+srv://"+srvr+":"+srvrCred+"@cluster0.iyod0tt.mongodb.net/userDB");
 
-const userSchema = {
+const userSchema = new mongoose.Schema ({
     email: String,
     password: String
-};
+});
+
+userSchema.plugin(encrypt, { secret: secret, encryptedFields: ["password"] });
 
 const User = new mongoose.model("User", userSchema);
 
@@ -69,9 +73,3 @@ app.post("/login", function(req, res) {
 app.listen(3000, function() {
     console.log("Server started on port 3000.");
 });
-
-process.on('SIGINT', function() {
-    console.log( "\nGracefully shutting down from SIGINT (Ctrl-C)" );
-    // some other closing procedures go here
-    process.exit(0);
-  });
